@@ -1,3 +1,4 @@
+# coding: utf-8
 import xml.dom.minidom
 
 class EasyXML:
@@ -84,7 +85,7 @@ class EasyXML:
       </root>
     '''
 
-    def __init__(self, name):
+    def __init__(self, name, _encoding='UTF-8'):
         '''
         Construct a new EasyXML node with a certain name.  This should
         only be used to create the root node, all child nodes should be
@@ -93,6 +94,7 @@ class EasyXML:
         self._parent = None
         self._name = name
         self._text = None
+        self._encoding = _encoding
         self._elements = []
         self._attributes = {}
         self._element_map = {}
@@ -109,7 +111,7 @@ class EasyXML:
             return object.__getattr__(self, name)
         if name in self._element_map:
             return self._element_map[name]
-        element = EasyXML(name)
+        element = EasyXML(name, _encoding=self._encoding)
         element._parent = self
         return element
 
@@ -120,10 +122,10 @@ class EasyXML:
         adds new elements as far up the parent chain as needed, so you don't
         need to create every parent explicitly.
         '''
-        e = new_element = EasyXML(self._name)
+        e = new_element = EasyXML(self._name, _encoding=self._encoding)
         e._parent = self._parent
         e._attributes = kwargs
-        e._text = _text
+        e._text = _text.encode(e._encoding)
         while e._parent and e not in e._parent._element_map.values():
             e._parent._elements.append(e)
             e._parent._element_map[e._name] = e
@@ -146,6 +148,7 @@ class EasyXML:
         return doc
 
     def _dom(self, pretty=False, encoding=None, indent='\t', newline='\n'):
+        #encoding = encoding or self._encoding
         if pretty:
             return newline.join([node.toprettyxml(encoding=encoding, indent=indent, newl=newline) for node in self.__tree__.childNodes])
         else:
@@ -155,6 +158,7 @@ class EasyXML:
         '''
         Return generated XML representing the stored element tree.
         '''
+        #encoding = encoding or self._encoding
         if pretty:
             return self.__tree__.toprettyxml(encoding=encoding, indent=indent, newl=newline)
         else:
