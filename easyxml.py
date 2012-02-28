@@ -1,5 +1,4 @@
 import xml.dom.minidom
-import re
 
 class EasyXML:
     '''
@@ -93,6 +92,7 @@ class EasyXML:
         '''
         self._parent = None
         self._name = name
+        self._text = None
         self._elements = []
         self._attributes = {}
         self._element_map = {}
@@ -113,7 +113,7 @@ class EasyXML:
         element._parent = self
         return element
 
-    def __call__(self, **kwargs):
+    def __call__(self, _text=None, **kwargs):
         '''
         Add a new element with our name to our parent element.  Any keyword
         arguments are set as attributes on the new element.  This actually
@@ -123,24 +123,39 @@ class EasyXML:
         e = new_element = EasyXML(self._name)
         e._parent = self._parent
         e._attributes = kwargs
+        e._text = _text
         while e._parent and e not in e._parent._element_map.values():
             e._parent._elements.append(e)
             e._parent._element_map[e._name] = e
             e = e._parent
         return new_element
 
-    def __str__(self):
-        '''
-        Return generated XML representing the stored element tree.
-        '''
+    @property
+    def __tree__(self):
+        doc = xml.dom.minidom.Document()
         def to_xml(obj):
             element = doc.createElement(obj._name)
+            if obj._text:
+                element.appendChild(doc.createTextNode(obj._text))
             for k in obj._attributes:
                 element.setAttribute(k, str(obj._attributes[k]))
             for e in obj._elements:
                 element.appendChild(to_xml(e))
             return element
-
-        doc = xml.dom.minidom.Document()
         doc.appendChild(to_xml(self))
-        return re.sub(r'<\?xml.*\?>', '', doc.toprettyxml(indent='  ')).strip()
+        return doc
+
+    def _dom(self, pretty=False, encoding=None, indent='\t', newline='\n'):
+        if pretty:
+            return newline.join([node.toprettyxml(encoding=encoding, indent=indent, newl=newline) for node in self.__tree__.childNodes])
+        else:
+            return ''.join([node.toxml(encoding=encoding) for node in self.__tree__.childNodes])
+
+    def __str__(self, pretty=False, encoding=None, indent='  ', newline='\n'):
+        '''
+        Return generated XML representing the stored element tree.
+        '''
+        if pretty:
+            return self.__tree__.toprettyxml(encoding=encoding, indent=indent, newl=newline)
+        else:
+            return self.__tree__.toxml(encoding=encoding)
