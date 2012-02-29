@@ -1,7 +1,7 @@
 ## Install with pip
 
 ```
-pip install -e git+git@github.com:5monkeys/easyxml.git@develop#egg=easyxml
+pip install -e git+git://github.com/5monkeys/easyxml.git@develop#egg=easyxml
 ```
 
 ## Description
