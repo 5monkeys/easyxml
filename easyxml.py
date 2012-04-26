@@ -138,7 +138,7 @@ class EasyXML:
         def to_xml(obj):
             element = doc.createElement(obj._name)
             if obj._text:
-                element.appendChild(doc.createTextNode(obj._text))
+                element.appendChild(doc.createTextNode(unicode(obj._text)))
             for k in obj._attributes:
                 element.setAttribute(k, str(obj._attributes[k]))
             for e in obj._elements:
